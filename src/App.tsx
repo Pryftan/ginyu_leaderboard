@@ -1,33 +1,49 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useState, useEffect } from 'react'
+import { createClient } from '@supabase/supabase-js'
+import { Database } from './database.types'
+import { Flex, Center, Select } from '@chakra-ui/react'
 import './App.css'
 
+const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucHRxa2FwZG9ieW1xZG5sb3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM1ODE1ODYsImV4cCI6MjAyOTE1NzU4Nn0.00HoKGwNxSdzJjFHSoxbJSt0BqrtTMyNJQSRBqxcre8'
+const supabase = createClient<Database>(supabaseUrl, supabaseKey)
+
+interface Event {
+  id: number;
+  name: string;
+  date: Date;
+  participants: [number];
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [events, setEvents] = useState<Array<Event>>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const getEvents = async () => {
+    let { data, error } = await supabase
+    .from('events')
+    .select('*');
+    setEvents(data || []);
+    setErrorMessage(error?.message || "");
+  }
+
+  useEffect(() => {
+    getEvents()
+  }, [])
 
   return (
     <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      <h2>Leaderboard</h2>
+      {events && 
+        <Center>
+          <Select>
+            {events.map((event) =>
+               <option key={event.id} value={event.id}>{event.name}</option>
+            )}
+          </Select>
+        </Center>
+      }
+      {errorMessage && <p>{errorMessage}</p>}
     </>
   )
 }
