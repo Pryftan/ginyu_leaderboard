@@ -35,13 +35,15 @@ function App() {
     <>
       <h2>Leaderboard</h2>
       {events && 
-        <Center>
-          <Select>
-            {events.map((event) =>
-               <option key={event.id} value={event.id}>{event.name}</option>
-            )}
-          </Select>
-        </Center>
+        <Flex>
+          <Center>
+            <Select>
+              {events.map((event) =>
+                <option key={event.id} value={event.id}>{event.name}</option>
+              )}
+            </Select>
+          </Center>
+        </Flex>
       }
       {errorMessage && <p>{errorMessage}</p>}
     </>
