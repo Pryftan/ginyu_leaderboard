@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
-import { Flex, Center, Select, Box } from '@chakra-ui/react'
+import { Flex, Center, Select, Box, Button, Tag } from '@chakra-ui/react'
 import { Reorder } from "framer-motion";
 import './App.css'
 
@@ -122,7 +122,7 @@ function App() {
       setSortedScores(sortArrayByProperty(sortProperty))
     }
     sortData()
-  }, [scores])
+  }, [scores, sortProperty])
 
   return (
     <>
@@ -166,6 +166,34 @@ function App() {
               </Reorder.Item>
             )}
           </Reorder.Group>
+        </Flex>
+        <Flex mb={2} justify={'space-between'} flexDir='row'>
+          <Button p={0} variant={'ghost'} size='xs' onClick={() => setSortProperty('totalScore')}>
+              <Tag 
+                  borderRadius={'3xl'} 
+                  m={2}
+                  fontSize='xs'
+                  fontWeight={sortProperty == 'totalScore' ? 'bold' : 'normal'} 
+                  variant={sortProperty == 'totalScore' ? 'solid' : 'subtle'}
+                  >
+                      Total
+                  {//property == 'dollarVolume' && <TagRightIcon as={FiChevronDown}/> 
+                  }
+              </Tag>
+          </Button>
+            <Button p={0} variant={'ghost'} size='xs' onClick={() => setSortProperty('averageScore')}>
+              <Tag 
+                  borderRadius={'3xl'} 
+                  m={2}
+                  fontSize='xs'
+                  fontWeight={sortProperty == 'averageScore' ? 'bold' : 'normal'} 
+                  variant={sortProperty == 'averageScore' ? 'solid' : 'subtle'}
+                  >
+                      Average
+                  {//property == 'Funded' && <TagRightIcon as={FiChevronDown}/> 
+                  }
+              </Tag>
+          </Button>
         </Flex>
         </>
       }
