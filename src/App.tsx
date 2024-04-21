@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
 import { Flex, Center, Select, Box, Button, Tag } from '@chakra-ui/react'
 import { Reorder } from "framer-motion";
+import { Score } from "./Score";
 import './App.css'
 
 const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
@@ -126,7 +127,7 @@ function App() {
 
   return (
     <>
-      <Flex p={3} flexDir={'column'} w='250px'>
+      <Flex p={3} flexDir={'column'} w='300px'>
       {events && 
         <>
         <Center>
@@ -139,7 +140,7 @@ function App() {
                 key={event.id} 
                 value={event.id}
               >
-                {event.name}
+                {event.name} ({event.date.toString()})
               </option>
             )}
           </Select>
@@ -160,14 +161,15 @@ function App() {
                     {score.name}
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
-                    {score.totalScore}
+                    {sortProperty == 'totalScore' && score.totalScore}
+                    {sortProperty == 'averageScore' && score.averageScore.toPrecision(2)}
                   </Box>
                 </Flex>}
               </Reorder.Item>
             )}
           </Reorder.Group>
         </Flex>
-        <Flex mb={2} justify={'space-between'} flexDir='row'>
+        {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > 0 && <Flex mb={2} justify={'space-between'} flexDir='row'>
           <Button p={0} variant={'ghost'} size='xs' onClick={() => setSortProperty('totalScore')}>
               <Tag 
                   borderRadius={'3xl'} 
@@ -194,7 +196,7 @@ function App() {
                   }
               </Tag>
           </Button>
-        </Flex>
+        </Flex>}
         </>
       }
       </Flex>
