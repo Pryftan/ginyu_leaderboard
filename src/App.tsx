@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
 import { Flex, Center, Select, Box } from '@chakra-ui/react'
+import { Reorder } from "framer-motion";
 import './App.css'
 
 const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
@@ -26,9 +27,18 @@ function App() {
   const [events, setEvents] = useState<Array<Event>>([])
   const [selectedEvent, setSelectedEvent] = useState<Event>()
   const [scores, setScores] = useState<Array<Score>>([])
+  const [sortedScores, setSortedScores] = useState<Array<Score>>([])
   const [errorMessage, setErrorMessage] = useState<string>('')
-  //const [sortProperty, setSortProperty] = useState<string>('total')
+  const [sortProperty, setSortProperty] = useState<string>('totalScore')
 
+  const sortArrayByProperty = (prop: string) => {
+    if (prop == 'averageScore' || prop == 'totalScore') {
+      return [...scores].sort((a,b) => b[`${prop}`] - a[`${prop}`])
+    } else {
+      return scores
+    }
+  }
+  
   const getEvents = async () => {
     let { data, error } = await supabase
       .from('events')
@@ -84,11 +94,11 @@ function App() {
   }, [])
 
   useEffect(() => {
-    const refreshScoresIf = async () => {
-      console.log(selectedEvent)
+    const refreshScoresIf = async (eventID: number) => {
       if (selectedEvent) {
-        console.log('Triggered refresh')
-        refreshScores(selectedEvent)
+        if (eventID == selectedEvent.id) {
+          refreshScores(selectedEvent)
+        }
       }
     }
 
@@ -97,8 +107,8 @@ function App() {
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'scores' },
       (payload) => {
-        console.log('Change received!', payload)
-        refreshScoresIf()
+        //console.log('Change received!', payload)
+        refreshScoresIf(payload.new.event)
       }
     )
     .subscribe()
@@ -106,6 +116,13 @@ function App() {
       supabase.removeChannel(subscription)
     };
   }, [selectedEvent])
+
+  useEffect(() => {
+    const sortData = () => {
+      setSortedScores(sortArrayByProperty(sortProperty))
+    }
+    sortData()
+  }, [scores])
 
   return (
     <>
@@ -128,16 +145,27 @@ function App() {
           </Select>
         </Center>
         <Flex flexDir={'column'}>
-          {scores && scores.map((score) =>
-            <Flex key={score.id} mb={2} justify={'space-between'} flexDir='row'>
-              <Box key={`${score.id}_name`} p={2}>
-                {score.name}
-              </Box>
-              <Box key={`${score.id}_score`} p={2}>
-                {score.totalScore}
-              </Box>
-            </Flex>
-          )}
+          <Reorder.Group as='div' draggable={false} dragControls={undefined} onReorder={()=>{}} dragListener={false} axis='y' values={sortedScores}>
+            {sortedScores && sortedScores.map((score) =>
+              <Reorder.Item 
+                as='div' 
+                key={score.id} 
+                dragListener={false}
+                draggable={false} 
+                value={score}
+              >
+                {score.totalScore > 0 &&
+                <Flex key={score.id} mb={2} justify={'space-between'} flexDir='row'>
+                  <Box key={`${score.id}_name`} p={2}>
+                    {score.name}
+                  </Box>
+                  <Box key={`${score.id}_score`} p={2}>
+                    {score.totalScore}
+                  </Box>
+                </Flex>}
+              </Reorder.Item>
+            )}
+          </Reorder.Group>
         </Flex>
         </>
       }
