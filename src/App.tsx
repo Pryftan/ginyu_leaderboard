@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database } from './database.types'
-import { Flex, Center, Select } from '@chakra-ui/react'
+import { Flex, Center, Select, Box } from '@chakra-ui/react'
 import './App.css'
 
 const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
@@ -15,36 +15,133 @@ interface Event {
   participants: [number];
 }
 
+interface Score {
+  id: number;
+  name: string;
+  totalScore: number;
+  averageScore: number;
+}
+
 function App() {
-  const [events, setEvents] = useState<Array<Event>>([]);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [events, setEvents] = useState<Array<Event>>([])
+  const [selectedEvent, setSelectedEvent] = useState<Event>()
+  const [scores, setScores] = useState<Array<Score>>([])
+  const [errorMessage, setErrorMessage] = useState<string>('')
+  //const [sortProperty, setSortProperty] = useState<string>('total')
 
   const getEvents = async () => {
     let { data, error } = await supabase
-    .from('events')
-    .select('*');
-    setEvents(data || []);
-    setErrorMessage(error?.message || "");
+      .from('events')
+      .select('*')
+      .order('date', { ascending: false })
+    setEvents(data || [])
+    setErrorMessage(error?.message || '')
+    if (data) {
+      await selectEvent(data[0])
+    }
+  }
+
+  const selectEvent = async (currEvent: Event) => {
+    setSelectedEvent(currEvent)
+    refreshScores(currEvent)
+  }
+
+  const refreshScores = async (currEvent: Event) => {
+    let { data: players, error} = await supabase
+      .from('players')
+      .select('id, name')
+      .in('id', currEvent.participants)
+    if (error) {
+      setErrorMessage(error?.message)
+      return
+    }
+    let { data, error: error2 } = await supabase
+      .from('scores')
+      .select('*')
+      .eq('event', currEvent.id)
+    if (error2) {
+      setErrorMessage(error2?.message)
+      return
+    }
+    if (players) {
+      if (data) {
+        setScores(players.map(player=>{
+          const total = data?.filter((score)=>score.player == player.id).reduce((acc, cur)=>acc+cur.score,0)
+          const count = data?.filter((score)=>score.player == player.id).length || 0
+          return {
+            id: player.id, 
+            name: player.name,
+            totalScore: total,
+            averageScore: total / count,
+          }
+        }))
+      }
+    }
   }
 
   useEffect(() => {
     getEvents()
   }, [])
 
+  useEffect(() => {
+    const refreshScoresIf = async () => {
+      console.log(selectedEvent)
+      if (selectedEvent) {
+        console.log('Triggered refresh')
+        refreshScores(selectedEvent)
+      }
+    }
+
+    const subscription = supabase.channel('custom-insert-channel')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'scores' },
+      (payload) => {
+        console.log('Change received!', payload)
+        refreshScoresIf()
+      }
+    )
+    .subscribe()
+    return () => {
+      supabase.removeChannel(subscription)
+    };
+  }, [selectedEvent])
+
   return (
     <>
-      <h2>Leaderboard</h2>
+      <Flex p={3} flexDir={'column'} w='250px'>
       {events && 
-        <Flex>
-          <Center>
-            <Select>
-              {events.map((event) =>
-                <option key={event.id} value={event.id}>{event.name}</option>
-              )}
-            </Select>
-          </Center>
+        <>
+        <Center>
+          <Select 
+            onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>{
+              selectEvent(events.filter((event)=>event.id==parseInt(e.currentTarget.value))[0])
+          }}>
+            {events.map((event) =>
+              <option 
+                key={event.id} 
+                value={event.id}
+              >
+                {event.name}
+              </option>
+            )}
+          </Select>
+        </Center>
+        <Flex flexDir={'column'}>
+          {scores && scores.map((score) =>
+            <Flex key={score.id} mb={2} justify={'space-between'} flexDir='row'>
+              <Box key={`${score.id}_name`} p={2}>
+                {score.name}
+              </Box>
+              <Box key={`${score.id}_score`} p={2}>
+                {score.totalScore}
+              </Box>
+            </Flex>
+          )}
         </Flex>
+        </>
       }
+      </Flex>
       {errorMessage && <p>{errorMessage}</p>}
     </>
   )
