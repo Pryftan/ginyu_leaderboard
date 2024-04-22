@@ -165,36 +165,45 @@ function App() {
                 </Flex>}
               </Reorder.Item>
             )}
+            {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > -1 && 
+              <Reorder.Item 
+                as='div' 
+                key={'buttons'} 
+                dragListener={false}
+                draggable={false}
+                value={'buttons'}
+              >
+              <Flex mb={2} justify={'space-between'} flexDir='row'>
+              <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('totalScore')}>
+                  <Tag 
+                      borderRadius={'3xl'} 
+                      m={2}
+                      fontSize='xs'
+                      fontWeight={sortProperty == 'totalScore' ? 'bold' : 'normal'} 
+                      variant={sortProperty == 'totalScore' ? 'solid' : 'subtle'}
+                      >
+                          Total
+                      {//property == 'dollarVolume' && <TagRightIcon as={FiChevronDown}/> 
+                      }
+                  </Tag>
+              </Button>
+              <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('averageScore')}>
+                <Tag 
+                    borderRadius={'3xl'} 
+                    m={2}
+                    fontSize='xs'
+                    fontWeight={sortProperty == 'averageScore' ? 'bold' : 'normal'} 
+                    variant={sortProperty == 'averageScore' ? 'solid' : 'subtle'}
+                    >
+                        Average
+                    {//property == 'Funded' && <TagRightIcon as={FiChevronDown}/> 
+                    }
+                </Tag>
+              </Button>
+            </Flex>
+            </Reorder.Item>}
           </Reorder.Group>
         </Flex>
-        {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > -1 && <Flex mb={2} justify={'space-between'} flexDir='row'>
-          <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('totalScore')}>
-              <Tag 
-                  borderRadius={'3xl'} 
-                  m={2}
-                  fontSize='xs'
-                  fontWeight={sortProperty == 'totalScore' ? 'bold' : 'normal'} 
-                  variant={sortProperty == 'totalScore' ? 'solid' : 'subtle'}
-                  >
-                      Total
-                  {//property == 'dollarVolume' && <TagRightIcon as={FiChevronDown}/> 
-                  }
-              </Tag>
-          </Button>
-          <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('averageScore')}>
-            <Tag 
-                borderRadius={'3xl'} 
-                m={2}
-                fontSize='xs'
-                fontWeight={sortProperty == 'averageScore' ? 'bold' : 'normal'} 
-                variant={sortProperty == 'averageScore' ? 'solid' : 'subtle'}
-                >
-                    Average
-                {//property == 'Funded' && <TagRightIcon as={FiChevronDown}/> 
-                }
-            </Tag>
-          </Button>
-        </Flex>}
         </>
       }
       </Flex>
