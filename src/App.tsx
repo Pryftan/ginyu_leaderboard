@@ -147,7 +147,7 @@ function App() {
                 draggable={false} 
                 value={score}
               >
-                {score.totalScore > 0 &&
+                {score.totalScore > -1 &&
                 <Flex key={score.id} mb={2} justify={'space-between'} flexDir='row'>
                   <Box key={`${score.id}_name`} p={2}>
                     <Avatar 
@@ -160,14 +160,14 @@ function App() {
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
                     {sortProperty == 'totalScore' && score.totalScore}
-                    {sortProperty == 'averageScore' && score.averageScore.toPrecision(2)}
+                    {sortProperty == 'averageScore' && (isNaN(score.averageScore) ? '-' : score.averageScore.toPrecision(2))}
                   </Box>
                 </Flex>}
               </Reorder.Item>
             )}
           </Reorder.Group>
         </Flex>
-        {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > 0 && <Flex mb={2} justify={'space-between'} flexDir='row'>
+        {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > -1 && <Flex mb={2} justify={'space-between'} flexDir='row'>
           <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('totalScore')}>
               <Tag 
                   borderRadius={'3xl'} 
