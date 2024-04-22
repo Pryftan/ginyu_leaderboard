@@ -1,21 +1,13 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Database } from './database.types'
-import { Flex, Center, Select, Box, Button, Tag } from '@chakra-ui/react'
+import { Database, Event } from './database.types'
+import { Flex, Center, Select, Box, Button, Tag, Avatar } from '@chakra-ui/react'
 import { Reorder } from "framer-motion";
-import { Score } from "./Score";
 import './App.css'
 
 const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucHRxa2FwZG9ieW1xZG5sb3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM1ODE1ODYsImV4cCI6MjAyOTE1NzU4Nn0.00HoKGwNxSdzJjFHSoxbJSt0BqrtTMyNJQSRBqxcre8'
 const supabase = createClient<Database>(supabaseUrl, supabaseKey)
-
-interface Event {
-  id: number;
-  name: string;
-  date: Date;
-  participants: [number];
-}
 
 interface Score {
   id: number;
@@ -158,6 +150,12 @@ function App() {
                 {score.totalScore > 0 &&
                 <Flex key={score.id} mb={2} justify={'space-between'} flexDir='row'>
                   <Box key={`${score.id}_name`} p={2}>
+                    <Avatar 
+                        key={`${score.name}-avatar`} 
+                        mr={2} 
+                        src={`/avatars/${score.name}.png`} 
+                        size='sm'>
+                    </Avatar>
                     {score.name}
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
@@ -170,7 +168,7 @@ function App() {
           </Reorder.Group>
         </Flex>
         {scores.map(({totalScore})=>totalScore).reduce((a,c)=>a+c,0) > 0 && <Flex mb={2} justify={'space-between'} flexDir='row'>
-          <Button p={0} variant={'ghost'} size='xs' onClick={() => setSortProperty('totalScore')}>
+          <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('totalScore')}>
               <Tag 
                   borderRadius={'3xl'} 
                   m={2}
@@ -183,18 +181,18 @@ function App() {
                   }
               </Tag>
           </Button>
-            <Button p={0} variant={'ghost'} size='xs' onClick={() => setSortProperty('averageScore')}>
-              <Tag 
-                  borderRadius={'3xl'} 
-                  m={2}
-                  fontSize='xs'
-                  fontWeight={sortProperty == 'averageScore' ? 'bold' : 'normal'} 
-                  variant={sortProperty == 'averageScore' ? 'solid' : 'subtle'}
-                  >
-                      Average
-                  {//property == 'Funded' && <TagRightIcon as={FiChevronDown}/> 
-                  }
-              </Tag>
+          <Button p={0} variant={''} size='xs' onClick={() => setSortProperty('averageScore')}>
+            <Tag 
+                borderRadius={'3xl'} 
+                m={2}
+                fontSize='xs'
+                fontWeight={sortProperty == 'averageScore' ? 'bold' : 'normal'} 
+                variant={sortProperty == 'averageScore' ? 'solid' : 'subtle'}
+                >
+                    Average
+                {//property == 'Funded' && <TagRightIcon as={FiChevronDown}/> 
+                }
+            </Tag>
           </Button>
         </Flex>}
         </>
