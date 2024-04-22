@@ -153,7 +153,7 @@ function App() {
                     <Avatar 
                         key={`${score.name}-avatar`} 
                         mr={2} 
-                        src={`/avatars/${score.name}.png`} 
+                        src={`/ginyu_leaderboard/avatars/${score.name}.png`} 
                         size='sm'>
                     </Avatar>
                     {score.name}
