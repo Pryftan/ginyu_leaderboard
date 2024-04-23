@@ -1,19 +1,26 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
 import { Database, Event } from './database.types'
-import { Flex, Center, Select, Box, Button, Tag, Avatar } from '@chakra-ui/react'
-import { Reorder } from "framer-motion";
+import { Flex, Center, Select, Box, Button, Tag, Avatar, Image } from '@chakra-ui/react'
+import { Reorder, motion } from "framer-motion";
 import './App.css'
 
 const supabaseUrl = 'https://bnptqkapdobymqdnlowf.supabase.co'
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJucHRxa2FwZG9ieW1xZG5sb3dmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTM1ODE1ODYsImV4cCI6MjAyOTE1NzU4Nn0.00HoKGwNxSdzJjFHSoxbJSt0BqrtTMyNJQSRBqxcre8'
 const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
+const delay = (ms: number | undefined) => new Promise(res => setTimeout(res, ms));
+
 interface Score {
-  id: number;
-  name: string;
-  totalScore: number;
-  averageScore: number;
+  id: number
+  name: string
+  totalScore: number
+  averageScore: number
+}
+
+interface Cover {
+  enabled: boolean
+  image: string
 }
 
 function App() {
@@ -23,6 +30,8 @@ function App() {
   const [sortedScores, setSortedScores] = useState<Array<Score>>([])
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [sortProperty, setSortProperty] = useState<string>('totalScore')
+  const [cover, setCover] = useState<Cover>({enabled: false, image: '/covers/empty.png'})
+  const [hideAll, setHideAll] = useState(false)
 
   const sortArrayByProperty = (prop: string) => {
     if (prop == 'averageScore' || prop == 'totalScore') {
@@ -82,8 +91,28 @@ function App() {
     }
   }
 
+  const triggerCover = async (coverData: Cover) => {
+    setCover(coverData)
+    await delay(500)
+    setHideAll(coverData.enabled)
+  }
+
   useEffect(() => {
     getEvents()
+    const subscription = supabase.channel('custom-update-channel')
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'states' },
+      (payload) => {
+        if (payload.new.id == 'cover') {
+          triggerCover({enabled: payload.new.enabled, image: payload.new.data.image})
+        }
+      }
+    )
+    .subscribe()
+    return () => {
+      supabase.removeChannel(subscription)
+    };
   }, [])
 
   useEffect(() => {
@@ -120,7 +149,22 @@ function App() {
   return (
     <>
       <Flex p={3} flexDir={'column'} w='300px'>
-      {events && 
+        <Center>
+          <div style={{'position': 'absolute', 'top': '-300px'}}>
+          <motion.div
+            initial={false}
+            animate={{
+              height: cover.enabled ? 1200 : 0,
+              width: cover.enabled ? 1200 : 0,
+            }}
+          >
+            <Box position={'relative'} zIndex={2}>
+              <Image src={`/ginyu_leaderboard${cover.image}`} objectFit={'cover'} boxSize={'100%'}/>
+            </Box>
+            </motion.div>
+          </div>
+        </Center>
+      {events && !hideAll &&
         <>
         <Center>
           <Select 
@@ -160,7 +204,7 @@ function App() {
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
                     {sortProperty == 'totalScore' && score.totalScore}
-                    {sortProperty == 'averageScore' && (isNaN(score.averageScore) ? '-' : score.averageScore.toPrecision(2))}
+                    {sortProperty == 'averageScore' && (isNaN(score.averageScore) ? '-' : score.averageScore.toFixed(2))}
                   </Box>
                 </Flex>}
               </Reorder.Item>
