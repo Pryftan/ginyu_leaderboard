@@ -40,6 +40,17 @@ function App() {
       return scores
     }
   }
+
+  const getStates = async () => {
+    let { data, error } = await supabase
+      .from('states')
+      .select('*')
+    setErrorMessage(error?.message || '')
+    if (data) {
+      const coverState = data.filter((entry)=>entry.id=='cover')[0]
+      setCover({enabled: coverState.enabled, image: coverState.data.image})
+    }
+  }
   
   const getEvents = async () => {
     let { data, error } = await supabase
@@ -98,6 +109,7 @@ function App() {
   }
 
   useEffect(() => {
+    getStates()
     getEvents()
     const subscription = supabase.channel('custom-update-channel')
     .on(
