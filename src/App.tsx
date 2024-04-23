@@ -22,9 +22,16 @@ interface Score {
   count: number
 }
 
+interface CoverData {
+  image: string
+  size?: number
+  top?: number
+  hides?: boolean
+}
+
 interface Cover {
   enabled: boolean
-  image: string
+  data: CoverData
 }
 
 function App() {
@@ -34,7 +41,7 @@ function App() {
   const [sortedScores, setSortedScores] = useState<Array<Score>>([])
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [sortProperty, setSortProperty] = useState<string>('totalScore')
-  const [cover, setCover] = useState<Cover>({enabled: false, image: '/covers/empty.png'})
+  const [cover, setCover] = useState<Cover>({enabled: false, data: {image: '/covers/empty.png', hides: false}})
   const [hideAll, setHideAll] = useState(false)
 
   const sortArrayByProperty = (prop: string) => {
@@ -52,8 +59,10 @@ function App() {
     setErrorMessage(error?.message || '')
     if (data) {
       const coverState = data.filter((entry)=>entry.id=='cover')[0]
-      setCover({enabled: coverState.enabled, image: coverState.data.image})
-      setHideAll(coverState.enabled)
+      setCover(coverState)
+      if (coverState.hides || false) {
+        setHideAll(coverState.enabled)
+      }
     }
   }
   
@@ -108,10 +117,12 @@ function App() {
     }
   }
 
-  const triggerCover = async (coverData: Cover) => {
-    setCover(coverData)
-    await delay(500)
-    setHideAll(coverData.enabled)
+  const triggerCover = async (cover: Cover) => {
+    setCover(cover)
+    if (cover.data.hides || false) {
+      await delay(500)
+      setHideAll(cover.enabled)
+    }
   }
 
   useEffect(() => {
@@ -123,7 +134,7 @@ function App() {
       { event: 'UPDATE', schema: 'public', table: 'states' },
       (payload) => {
         if (payload.new.id == 'cover') {
-          triggerCover({enabled: payload.new.enabled, image: payload.new.data.image})
+          triggerCover({enabled: payload.new.enabled, data: payload.new.data})
         }
       }
     )
@@ -168,16 +179,16 @@ function App() {
     <>
       <Flex p={3} flexDir={'column'} w='335px'>
         <Center>
-          <div style={{'position': 'absolute', 'top': '-300px'}}>
+          <div style={{'position': 'absolute', 'top': `${cover.data.top || 0}px`}}>
           <motion.div
             initial={false}
             animate={{
-              height: cover.enabled ? 1200 : 0,
-              width: cover.enabled ? 1200 : 0,
+              height: cover.enabled ? cover.data.size || 50 : 0,
+              width: cover.enabled ? cover.data.size || 50 : 0,
             }}
           >
             <Box position={'relative'} zIndex={2}>
-              <Image src={`/ginyu_leaderboard${cover.image}`} objectFit={'cover'} boxSize={'100%'}/>
+              <Image src={`/ginyu_leaderboard${cover.data.image}`} objectFit={'cover'} boxSize={'100%'}/>
             </Box>
             </motion.div>
           </div>
