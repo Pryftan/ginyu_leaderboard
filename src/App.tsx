@@ -160,7 +160,7 @@ function App() {
 
   return (
     <>
-      <Flex p={3} flexDir={'column'} w='300px'>
+      <Flex p={3} flexDir={'column'} w='335px'>
         <Center>
           <div style={{'position': 'absolute', 'top': '-300px'}}>
           <motion.div
@@ -180,6 +180,7 @@ function App() {
         <>
         <Center>
           <Select 
+            defaultValue={selectedEvent?.id || 0}
             onChange={(e: React.ChangeEvent<HTMLSelectElement>)=>{
               selectEvent(events.filter((event)=>event.id==parseInt(e.currentTarget.value))[0])
           }}>
