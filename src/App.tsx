@@ -53,6 +53,7 @@ function App() {
     if (data) {
       const coverState = data.filter((entry)=>entry.id=='cover')[0]
       setCover({enabled: coverState.enabled, image: coverState.data.image})
+      setHideAll(coverState.enabled)
     }
   }
   
