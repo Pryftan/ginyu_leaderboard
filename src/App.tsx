@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@supabase/supabase-js'
-import { Database, Event } from './database.types'
+import { Database } from './database.types'
 import { Flex, Center, Select, Box, Button, Tag, Avatar, Image } from '@chakra-ui/react'
 import { Reorder, motion } from "framer-motion";
 import './App.css'
@@ -10,12 +10,16 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient<Database>(supabaseUrl, supabaseKey)
 
 const delay = (ms: number | undefined) => new Promise(res => setTimeout(res, ms));
+const avgPrecision = (total: number, divisor: number)  => divisor == 1 ? total.toString() : divisor == 10 ? (total / 10).toFixed(1) : (total / divisor).toFixed(2)
+
+type Event = Database['public']['Tables']['events']['Row']
 
 interface Score {
   id: number
   name: string
   totalScore: number
   averageScore: number
+  count: number
 }
 
 interface Cover {
@@ -96,6 +100,7 @@ function App() {
             name: player.name,
             totalScore: total,
             averageScore: total / count,
+            count: count
           }
         }))
       }
@@ -217,7 +222,7 @@ function App() {
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
                     {sortProperty == 'totalScore' && score.totalScore}
-                    {sortProperty == 'averageScore' && (isNaN(score.averageScore) ? '-' : score.averageScore.toFixed(2))}
+                    {sortProperty == 'averageScore' && (isNaN(score.averageScore) ? '-' : avgPrecision(score.totalScore, score.count))}
                   </Box>
                 </Flex>}
               </Reorder.Item>
