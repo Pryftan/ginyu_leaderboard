@@ -138,7 +138,7 @@ function App() {
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'states' },
       (payload) => {
-        if (payload.new.id == 'cover' && payload.new.enabled) {
+        if (payload.new.id == 'cover') {
           triggerCover({enabled: payload.new.enabled, data: payload.new.data})
         } else if (payload.new.id == 'playing') {
           if (payload.new.enabled) {
