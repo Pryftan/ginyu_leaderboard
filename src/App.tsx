@@ -41,6 +41,7 @@ function App() {
   const [sortedScores, setSortedScores] = useState<Array<Score>>([])
   const [errorMessage, setErrorMessage] = useState<string>('')
   const [sortProperty, setSortProperty] = useState<string>('totalScore')
+  const [playing, setPlaying] = useState<Array<string>>([])
   const [cover, setCover] = useState<Cover>({enabled: false, data: {image: '/covers/empty.png', hides: false}})
   const [hideAll, setHideAll] = useState(false)
 
@@ -62,6 +63,10 @@ function App() {
       setCover(coverState)
       if (coverState.hides || false) {
         setHideAll(coverState.enabled)
+      }
+      const playingState = data.filter((entry)=>entry.id=='playing')[0]
+      if (playingState.enabled) {
+        setPlaying(playingState.data.players)
       }
     }
   }
@@ -133,8 +138,14 @@ function App() {
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'states' },
       (payload) => {
-        if (payload.new.id == 'cover') {
+        if (payload.new.id == 'cover' && payload.new.enabled) {
           triggerCover({enabled: payload.new.enabled, data: payload.new.data})
+        } else if (payload.new.id == 'playing') {
+          if (payload.new.enabled) {
+            setPlaying(payload.new.data.players)
+          } else {
+            setPlaying([])
+          }
         }
       }
     )
@@ -230,7 +241,8 @@ function App() {
                         src={`/ginyu_leaderboard/avatars/${score.name}.png`} 
                         size='sm'>
                     </Avatar>
-                    {score.name}
+                    {playing.includes(score.name) && <b>{score.name}</b>}
+                    {!playing.includes(score.name) && score.name}
                   </Box>
                   <Box key={`${score.id}_score`} p={2}>
                     {sortProperty == 'totalScore' && score.totalScore}
